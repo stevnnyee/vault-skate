@@ -30,6 +30,7 @@ interface ProductVariation {
   color?: string;
   additionalPrice?: number;
   stockQuantity: number;
+  sku: string; 
 }
 
 // Product Schema Interface
@@ -56,7 +57,6 @@ interface IProduct extends mongoose.Document {
   lastUpdated: Date;
 }
 
-// Mongoose Schema
 const ProductSchema = new mongoose.Schema<IProduct>({
   name: {
     type: String,
@@ -86,19 +86,40 @@ const ProductSchema = new mongoose.Schema<IProduct>({
     type: Number,
     min: 0
   },
-  variations: [{
-    size: String,
-    color: String,
-    additionalPrice: {
-      type: Number,
-      default: 0
-    },
-    stockQuantity: {
-      type: Number,
-      required: true,
-      min: 0
+  variations: {
+    type: [{
+      size: String,
+      color: String,
+      sku: {
+        type: String,
+        required: [true, 'SKU is required for each variation']
+      },
+      additionalPrice: {
+        type: Number,
+        default: 0,
+        validate: {
+          validator: function(this: any, value: number) {
+            const basePrice = (this as any).parent().parent().basePrice;
+            return basePrice + (value || 0) >= 0;
+          },
+          message: 'Total price (base price + additional price) cannot be negative'
+        }
+      },
+      stockQuantity: {
+        type: Number,
+        required: true,
+        min: 0
+      }
+    }],
+    validate: {
+      validator: function(variations: any[]) {
+        const skus = variations.map(v => v.sku);
+        const uniqueSkus = new Set(skus);
+        return skus.length === uniqueSkus.size;
+      },
+      message: 'SKUs must be unique across all variations'
     }
-  }],
+  },
   images: [{
     type: String,
     validate: {
@@ -140,21 +161,27 @@ const ProductSchema = new mongoose.Schema<IProduct>({
   timestamps: true
 });
 
+
 // Pre-save middleware to update lastUpdated
 ProductSchema.pre('save', function(next) {
   this.lastUpdated = new Date();
   next();
 });
 
-// Static method to find products by category
-ProductSchema.statics.findByCategory = function(category: ProductCategory) {
-  return this.find({ category, isActive: true });
-};
-
-// Static method to find products by brand
-ProductSchema.statics.findByBrand = function(brand: ProductBrand) {
-  return this.find({ brand, isActive: true });
-};
+// Pre-save middleware to validate total prices
+ProductSchema.pre('save', function(next) {
+  const basePrice = this.basePrice;
+  
+  for (const variation of this.variations) {
+    const totalPrice = basePrice + (variation.additionalPrice || 0);
+    if (totalPrice < 0) {
+      next(new Error('Total price (base price + additional price) cannot be negative'));
+      return;
+    }
+  }
+  
+  next();
+});
 
 // Create and export the Product model
 const Product = mongoose.model<IProduct>('Product', ProductSchema);
