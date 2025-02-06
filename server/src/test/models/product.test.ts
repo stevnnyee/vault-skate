@@ -3,7 +3,6 @@ import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import Product from '../../models/product';
 import { ProductCategory, ProductBrand } from '../../types/product.types';
-import slugify from 'slugify';
 
 /**
  * Product Model Tests
