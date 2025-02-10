@@ -187,6 +187,7 @@ describe('Order Model Test Suite', () => {
       const order = new Order(mockOrderData);
       expect(order.formattedTotal).toBe('$59.98');
     });
+
     it('should track shipping status correctly', async () => {
       const order = new Order(mockOrderData);
       expect(order.isFullyShipped).toBe(false);
@@ -197,8 +198,8 @@ describe('Order Model Test Suite', () => {
   });
 
   // Static Methods Tests
-  describe('Static Methods', () => {
-    it('should find orders by user', async () => {
+describe('Static Methods', () => {
+  it('should find orders by user', async () => {
       const order = new Order({
         user: mockUserId,
         items: [{
@@ -230,13 +231,13 @@ describe('Order Model Test Suite', () => {
         shippingMethod: ShippingMethod.STANDARD
       });
       
-      await order.save();
-      
-      const userOrders = await Order.findByUser(mockUserId.toString());
-      expect(userOrders.length).toBe(1);
-    });
+    await order.save();
+    
+    const userOrders = await Order.findByUser(mockUserId.toString());
+    expect(userOrders.length).toBe(1);
+  });
 
-    it('should find orders by status', async () => {
+  it('should find orders by status', async () => {
       const order = new Order({
         user: mockUserId,
         items: [{
@@ -269,30 +270,30 @@ describe('Order Model Test Suite', () => {
         status: OrderStatus.PENDING
       });
       
-      await order.save();
-      
-      const pendingOrders = await Order.findByStatus(OrderStatus.PENDING);
-      expect(pendingOrders.length).toBe(1);
-    });
-
-    it('should generate order analytics', async () => {
-      const order = new Order(mockOrderData);
-      await order.save();
-      
-      const analytics = await Order.aggregate([
-        {
-          $group: {
-            _id: '$status',
-            count: { $sum: 1 },
-            totalRevenue: { $sum: '$totalAmount' }
-          }
-        }
-      ]);
-      expect(analytics).toBeDefined();
-      expect(analytics.length).toBe(1);
-      expect(analytics[0].count).toBe(1);
-      expect(analytics[0]._id).toBe(OrderStatus.PENDING);
-      expect(analytics[0].totalRevenue).toBe(59.98);
-    });
+    await order.save();
+    
+    const pendingOrders = await Order.findByStatus(OrderStatus.PENDING);
+    expect(pendingOrders.length).toBe(1);
   });
+
+  it('should generate order analytics', async () => {
+    const order = new Order(mockOrderData);
+    await order.save();
+    
+    const analytics = await Order.aggregate([
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 },
+          totalRevenue: { $sum: '$totalAmount' }
+        }
+      }
+    ]);
+    expect(analytics).toBeDefined();
+    expect(analytics.length).toBe(1);
+    expect(analytics[0].count).toBe(1);
+    expect(analytics[0]._id).toBe(OrderStatus.PENDING);
+    expect(analytics[0].totalRevenue).toBe(59.98);
+  });
+});
 });
