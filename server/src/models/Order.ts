@@ -6,7 +6,9 @@ import {
   IOrderModel,
   IOrderMethods,
   OrderStatus, 
-  PaymentMethod 
+  PaymentMethod,
+  PaymentStatus,
+  ShippingMethod
 } from '../types/order.types';
 
 /**
@@ -81,11 +83,21 @@ const OrderSchema = new mongoose.Schema<IOrderDocument, IOrderModel, IOrderMetho
   },
   paymentStatus: {
     type: String,
-    enum: ['Unpaid', 'Paid', 'Refunded'],
-    default: 'Unpaid'
+    enum: Object.values(PaymentStatus),
+    default: PaymentStatus.UNPAID
   },
   trackingNumber: String,
-  shippingMethod: String,
+  shippingMethod: {
+    type: String,
+    enum: Object.values(ShippingMethod),
+    required: true,
+    default: ShippingMethod.STANDARD
+  },
+  refundAmount: {
+    type: Number,
+    min: [0, 'Refund amount cannot be negative']
+  },
+  estimatedDeliveryDate: Date,
   notes: String,
   orderDate: {
     type: Date,
@@ -172,6 +184,62 @@ OrderSchema.statics.findRecentOrders = function(limit = 10) {
     .limit(limit)
     .populate('user', 'email name')
     .populate('items.product', 'name price');
+};
+
+// Add new methods for calculations
+OrderSchema.methods.calculateTax = function(this: IOrderDocument) {
+  // Basic tax calculation (can be made more sophisticated)
+  const TAX_RATE = 0.1; // 10%
+  return this.totalAmount * TAX_RATE;
+};
+
+OrderSchema.methods.calculateShipping = function(this: IOrderDocument) {
+  const baseRates = {
+    [ShippingMethod.STANDARD]: 5.99,
+    [ShippingMethod.EXPRESS]: 15.99,
+    [ShippingMethod.OVERNIGHT]: 29.99,
+    [ShippingMethod.LOCAL_PICKUP]: 0
+  };
+  return baseRates[this.shippingMethod];
+};
+
+OrderSchema.methods.processRefund = async function(this: IOrderDocument, amount: number) {
+  if (amount > this.totalAmount) {
+    throw new Error('Refund amount cannot exceed order total');
+  }
+  this.refundAmount = amount;
+  this.paymentStatus = amount === this.totalAmount ? 
+    PaymentStatus.REFUNDED : 
+    PaymentStatus.PARTIALLY_REFUNDED;
+  return await this.save();
+};
+
+OrderSchema.methods.updateEstimatedDelivery = async function(this: IOrderDocument) {
+  const deliveryDays = {
+    [ShippingMethod.STANDARD]: 5,
+    [ShippingMethod.EXPRESS]: 2,
+    [ShippingMethod.OVERNIGHT]: 1,
+    [ShippingMethod.LOCAL_PICKUP]: 0
+  };
+  
+  const days = deliveryDays[this.shippingMethod];
+  this.estimatedDeliveryDate = new Date(
+    Date.now() + (days * 24 * 60 * 60 * 1000)
+  );
+  return await this.save();
+};
+
+// Add new static method for analytics
+OrderSchema.statics.getOrderAnalytics = async function() {
+  return this.aggregate([
+    {
+      $group: {
+        _id: '$status',
+        count: { $sum: 1 },
+        totalRevenue: { $sum: '$totalAmount' }
+      }
+    }
+  ]);
 };
 
 // Create and export the Order model

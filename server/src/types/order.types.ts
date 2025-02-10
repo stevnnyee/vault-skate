@@ -27,6 +27,26 @@ export enum PaymentMethod {
 }
 
 /**
+ * Enum for payment status to avoid magic strings
+ */
+export enum PaymentStatus {
+  UNPAID = 'Unpaid',
+  PAID = 'Paid',
+  REFUNDED = 'Refunded',
+  PARTIALLY_REFUNDED = 'Partially Refunded'  // New status for partial refunds
+}
+
+/**
+ * Enum for shipping methods to standardize options
+ */
+export enum ShippingMethod {
+  STANDARD = 'Standard',
+  EXPRESS = 'Express',
+  OVERNIGHT = 'Overnight',
+  LOCAL_PICKUP = 'Local Pickup'
+}
+
+/**
  * Interface defining structure of items within an order
  * Each item represents a product being purchased with its details
  */
@@ -54,13 +74,15 @@ export interface IOrderBase {
   billingAddress: IAddress;    // Billing address
   status: OrderStatus;         // Current status of order
   paymentMethod: PaymentMethod; // Method of payment
-  paymentStatus: 'Unpaid' | 'Paid' | 'Refunded'; // Payment state
+  paymentStatus: PaymentStatus;  // Update to use enum instead of string union
   trackingNumber?: string;     // Shipping tracking number
-  shippingMethod?: string;     // Method of shipping
+  shippingMethod: ShippingMethod;  // Update to use enum instead of optional string
   notes?: string;              // Additional order notes
   orderDate: Date;             // When order was placed
   shippedDate?: Date;          // When order was shipped
   deliveredDate?: Date;        // When order was delivered
+  refundAmount?: number;  // Add refund tracking
+  estimatedDeliveryDate?: Date;  // Add estimated delivery date
   createdAt: Date;             // Document creation timestamp
   updatedAt: Date;             // Document update timestamp
 }
@@ -73,8 +95,11 @@ export interface IOrderMethods {
   updateStatus(newStatus: OrderStatus): Promise<IOrderDocument>; // Update order status
   formattedTotal: string;     // Format total amount with currency
   isFullyShipped: boolean;    // Check if order is shipped/delivered
+  processRefund(amount: number): Promise<IOrderDocument>;
+  updateEstimatedDelivery(): Promise<IOrderDocument>;
+  calculateTax(): number;     // Add calculation methods
+  calculateShipping(): number;
 }
-
 /**
  * Interface extending base order with Mongoose Document
  * Combines order properties with Mongoose Document functionality

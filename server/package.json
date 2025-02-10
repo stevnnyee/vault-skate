@@ -64,6 +64,7 @@
     "testMatch": [
       "**/test/**/*.test.ts"
     ],
+    "setupFilesAfterEnv": ["<rootDir>/jest.setup.js"],
     "verbose": true,
     "forceExit": true,
     "clearMocks": true,
