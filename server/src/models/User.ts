@@ -1,40 +1,20 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import { UserRole, IUser } from '../types/user.types';
+import { IAddress } from '../types/common.types';
 
-// Enum for user roles
-export enum UserRole {
-  CUSTOMER = 'Customer',
-  ADMIN = 'Admin',
-  MODERATOR = 'Moderator'
-}
-
-// Interface for address subdocument
-interface IAddress {
-  street: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
-}
-
-// Interface for User model
-interface IUser extends mongoose.Document {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  role: UserRole;
-  addresses: IAddress[];
-  phoneNumber?: string;
-  dateOfBirth?: Date;
-  profilePicture?: string;
-  isActive: boolean;
-  lastLogin?: Date;
+// Interface for User model with mongoose methods
+interface IUserDocument extends Omit<IUser, '_id'>, mongoose.Document {
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
+// Add interface for static methods
+interface UserModel extends mongoose.Model<IUserDocument> {
+  findByEmail(email: string): Promise<IUserDocument | null>;
+}
+
 // User Schema
-const UserSchema = new mongoose.Schema<IUser>({
+const UserSchema = new mongoose.Schema<IUserDocument>({
   firstName: {
     type: String,
     required: true,
@@ -56,7 +36,14 @@ const UserSchema = new mongoose.Schema<IUser>({
   password: {
     type: String,
     required: true,
-    minlength: 8
+    minlength: 8,
+    validate: {
+      validator: function(v: string) {
+        // At least 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
+        return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(v);
+      },
+      message: 'Password must contain at least 8 characters, including uppercase, lowercase, number and special character'
+    }
   },
   role: {
     type: String,
@@ -89,9 +76,10 @@ const UserSchema = new mongoose.Schema<IUser>({
     type: String,
     validate: {
       validator: function(v: string) {
-        return /\d{10}/.test(v);
+        // Allows international format, spaces, dashes, and parentheses
+        return /^\+?[\d\s-()]{10,}$/.test(v);
       },
-      message: 'Phone number must be 10 digits'
+      message: 'Please enter a valid phone number'
     }
   },
   dateOfBirth: Date,
@@ -141,7 +129,13 @@ UserSchema.statics.findByEmail = function(email: string) {
   return this.findOne({ email: email.toLowerCase() });
 };
 
-// Create and export the User model
-const User = mongoose.model<IUser>('User', UserSchema);
+// Add index for email lookups
+UserSchema.index({ email: 1 });
+
+// Add index for role-based queries
+UserSchema.index({ role: 1 });
+
+// Create and export the User model with proper typing
+const User = mongoose.model<IUserDocument, UserModel>('User', UserSchema);
 
 export default User;
