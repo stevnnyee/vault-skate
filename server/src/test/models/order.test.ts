@@ -6,7 +6,7 @@ import {
   PaymentMethod, 
   PaymentStatus, 
   ShippingMethod 
-} from '../../types/order.types';
+} from '../../types/models/order.types';
 
 describe('Order Model Test Suite', () => {
   let mongoServer: MongoMemoryServer;

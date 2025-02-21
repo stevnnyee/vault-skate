@@ -28,6 +28,7 @@
     "dotenv": "^16.4.7",
     "express": "^4.18.2",
     "express-validator": "^7.0.1",
+    "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.3.0",
     "mongoose": "^8.1.3",
@@ -64,7 +65,9 @@
     "testMatch": [
       "**/test/**/*.test.ts"
     ],
-    "setupFilesAfterEnv": ["<rootDir>/jest.setup.js"],
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest.setup.js"
+    ],
     "verbose": true,
     "forceExit": true,
     "clearMocks": true,

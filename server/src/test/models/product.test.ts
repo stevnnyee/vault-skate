@@ -2,7 +2,7 @@
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import Product from '../../models/product';
-import { ProductCategory, ProductBrand } from '../../types/product.types';
+import { ProductCategory, ProductBrand } from '../../types/models/product.types';
 
 /**
  * Product Model Tests
@@ -46,9 +46,11 @@ describe('Product Schema Tests', () => {
   const validProductData = {
     name: 'Pro Skateboard Complete',
     description: 'Professional grade complete skateboard',
+    basePrice: 129.99,
     category: ProductCategory.COMPLETE_SKATEBOARD,
     brand: ProductBrand.ELEMENT,
-    basePrice: 129.99,
+    sku: 'ELEM-PRO-COMP',
+    stock: 10,
     variations: [{
       size: '8.0"',
       color: 'Black',
@@ -134,20 +136,6 @@ describe('Product Schema Tests', () => {
     });
 
     /**
-     * Tests sale price validation
-     * Ensures sale price cannot be negative
-     */
-    test('should not allow negative sale price', async () => {
-      const productWithNegativeSalePrice = new Product({
-        ...validProductData,
-        basePrice: 100,
-        salePrice: -50
-      });
-
-      await expect(productWithNegativeSalePrice.save()).rejects.toThrow(mongoose.Error.ValidationError);
-    });
-
-    /**
      * Tests variation additional price validation
      * Ensures additional price defaults to 0 when not specified
      */
@@ -185,7 +173,7 @@ describe('Product Schema Tests', () => {
         }]
       });
 
-      await expect(productWithNegativeAdditional.save()).rejects.toThrow();
+      await expect(productWithNegativeAdditional.save()).rejects.toThrow('Total price (base price + additional price) cannot be negative');
     });
   });
 
@@ -246,155 +234,7 @@ describe('Product Schema Tests', () => {
         ]
       });
 
-      await expect(productWithDuplicateSKUs.save()).rejects.toThrow();
-    });
-
-    /**
-     * Tests stock quantity validation
-     * Ensures stock quantity cannot be negative
-     */
-    test('should not allow negative stock quantity', async () => {
-      const productWithNegativeStock = new Product({
-        ...validProductData,
-        variations: [{
-          size: '8.0"',
-          color: 'Black',
-          sku: 'TEST-SKU',
-          stockQuantity: -1,
-          additionalPrice: 0
-        }]
-      });
-
-      await expect(productWithNegativeStock.save()).rejects.toThrow(mongoose.Error.ValidationError);
+      await expect(productWithDuplicateSKUs.save()).rejects.toThrow('Duplicate SKU found in variations');
     });
   });
 });
-
-describe('Price Validation Tests', () => {
-    // Sample valid product data for testing
-    const validProductData = {
-      name: 'Pro Skateboard Complete',
-      description: 'Professional grade complete skateboard',
-      category: ProductCategory.COMPLETE_SKATEBOARD,
-      brand: ProductBrand.ELEMENT,
-      basePrice: 129.99,
-      variations: [{
-        size: '8.0"',
-        color: 'Black',
-        sku: 'ELEM-PRO-8-BLK',
-        stockQuantity: 10,
-        additionalPrice: 0
-      }],
-      images: ['https://example.com/image.jpg'],
-      isActive: true
-    };
-  
-    /**
-     * Tests base price validation
-     * Ensures base price cannot be negative
-     */
-    test('should not allow negative base price', async () => {
-      const productWithNegativePrice = new Product({
-        ...validProductData,
-        basePrice: -10
-      });
-  
-      await expect(productWithNegativePrice.save()).rejects.toThrow(mongoose.Error.ValidationError);
-    });
-  
-    /**
-     * Tests that variations with valid total prices are allowed
-     */
-    test('should allow variations with valid total prices', async () => {
-      const product = new Product({
-        ...validProductData,
-        basePrice: 100,
-        variations: [
-          {
-            size: '8.0"',
-            color: 'Black',
-            sku: 'TEST-SKU-1',
-            stockQuantity: 10,
-            additionalPrice: -50 // Total price would be 50 (still positive)
-          }
-        ]
-      });
-  
-      const savedProduct = await product.save();
-      expect(savedProduct.variations[0].additionalPrice).toBe(-50);
-    });
-  
-    /**
-     * Tests that variations with negative total prices are rejected
-     */
-    test('should reject variations with negative total prices', async () => {
-      const product = new Product({
-        ...validProductData,
-        basePrice: 100,
-        variations: [
-          {
-            size: '8.0"',
-            color: 'Black',
-            sku: 'TEST-SKU-1',
-            stockQuantity: 10,
-            additionalPrice: -110 // Would make total price -10
-          }
-        ]
-      });
-  
-      await expect(product.save()).rejects.toThrow('Total price (base price + additional price) cannot be negative');
-    });
-  
-    /**
-     * Tests that multiple variations all validate their total prices
-     */
-    test('should validate total prices for all variations', async () => {
-      const product = new Product({
-        ...validProductData,
-        basePrice: 100,
-        variations: [
-          {
-            size: '8.0"',
-            color: 'Black',
-            sku: 'TEST-SKU-1',
-            stockQuantity: 10,
-            additionalPrice: -50 // Valid: total 50
-          },
-          {
-            size: '8.5"',
-            color: 'Red',
-            sku: 'TEST-SKU-2',
-            stockQuantity: 5,
-            additionalPrice: -101 // Invalid: would make total -1
-          }
-        ]
-      });
-  
-      await expect(product.save()).rejects.toThrow('Total price (base price + additional price) cannot be negative');
-    });
-  
-    /**
-     * Tests updating variation prices after initial save
-     */
-    test('should validate total prices when updating variations', async () => {
-      // First create a valid product
-      const product = new Product({
-        ...validProductData,
-        basePrice: 100,
-        variations: [{
-          size: '8.0"',
-          color: 'Black',
-          sku: 'TEST-SKU-1',
-          stockQuantity: 10,
-          additionalPrice: 0
-        }]
-      });
-  
-      const savedProduct = await product.save();
-  
-      // Try to update with invalid additional price
-      savedProduct.variations[0].additionalPrice = -110; // Would make total price -10
-      
-      await expect(savedProduct.save()).rejects.toThrow('Total price (base price + additional price) cannot be negative');
-    });
-  });

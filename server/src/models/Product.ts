@@ -1,189 +1,126 @@
-import mongoose from 'mongoose';
+/**
+ * Product Model Definition
+ * Defines the Mongoose schema and model for products in the skateboard shop
+ */
 
-// Enum for product categories
-export enum ProductCategory {
-  COMPLETE_SKATEBOARD = 'Complete Skateboard',
-  DECK = 'Deck',
-  TRUCKS = 'Trucks',
-  WHEELS = 'Wheels',
-  BEARINGS = 'Bearings',
-  GRIP_TAPE = 'Grip Tape',
-  HARDWARE = 'Hardware',
-  ACCESSORIES = 'Accessories'
+import mongoose, { Schema, Document, Types } from 'mongoose';
+import { IProduct, ProductCategory, ProductBrand, IProductVariation } from '../types/models/product.types';
+
+/**
+ * Product Document Interface
+ * Extends the base product interface with Mongoose document methods
+ */
+export interface IProductDocument extends Document, Omit<IProduct, '_id'> {
+  _id: Types.ObjectId;
+  calculateRating: () => void;
 }
 
-// Enum for product brands
-export enum ProductBrand {
-  ELEMENT = 'Element',
-  SANTA_CRUZ = 'Santa Cruz',
-  ENJOI = 'Enjoi',
-  GIRL = 'Girl',
-  PLAN_B = 'Plan B',
-  ALMOST = 'Almost',
-  INDEPENDENT = 'Independent',
-  THUNDER = 'Thunder'
-}
-
-// Interface for product variations (e.g., sizes, colors)
-interface ProductVariation {
-  size?: string;
-  color?: string;
-  additionalPrice?: number;
-  stockQuantity: number;
-  sku: string; 
-}
-
-// Product Schema Interface
-interface IProduct extends mongoose.Document {
-  name: string;
-  description: string;
-  category: ProductCategory;
-  brand: ProductBrand;
-  basePrice: number;
-  salePrice?: number;
-  variations: ProductVariation[];
-  images: string[]; // URLs to product images
-  specs: {
-    length?: number;
-    width?: number;
-    material?: string;
-    weight?: number;
-  };
-  features: string[];
-  isActive: boolean;
-  averageRating?: number;
-  totalRatings?: number;
-  dateAdded: Date;
-  lastUpdated: Date;
-}
-
-const ProductSchema = new mongoose.Schema<IProduct>({
-  name: {
-    type: String,
+/**
+ * Product Schema Definition
+ * Defines the MongoDB schema for products with all fields and validations
+ */
+const ProductSchema = new Schema<IProductDocument>({
+  name: { type: String, required: true },
+  description: { type: String, required: true },
+  basePrice: { type: Number, required: true, min: 0 },
+  category: { 
+    type: String, 
     required: true,
-    trim: true
-  },
-  description: {
-    type: String,
-    required: true
-  },
-  category: {
-    type: String,
-    enum: Object.values(ProductCategory),
-    required: true
+    enum: Object.values(ProductCategory)
   },
   brand: {
     type: String,
-    enum: Object.values(ProductBrand),
-    required: true
-  },
-  basePrice: {
-    type: Number,
     required: true,
-    min: 0
+    enum: Object.values(ProductBrand)
   },
-  salePrice: {
-    type: Number,
-    min: 0
-  },
-  variations: {
-    type: [{
-      size: String,
-      color: String,
-      sku: {
-        type: String,
-        required: [true, 'SKU is required for each variation']
-      },
-      additionalPrice: {
-        type: Number,
-        default: 0,
-        validate: {
-          validator: function(this: any, value: number) {
-            const basePrice = (this as any).parent().parent().basePrice;
-            return basePrice + (value || 0) >= 0;
-          },
-          message: 'Total price (base price + additional price) cannot be negative'
-        }
-      },
-      stockQuantity: {
-        type: Number,
-        required: true,
-        min: 0
-      }
-    }],
-    validate: {
-      validator: function(variations: any[]) {
-        const skus = variations.map(v => v.sku);
-        const uniqueSkus = new Set(skus);
-        return skus.length === uniqueSkus.size;
-      },
-      message: 'SKUs must be unique across all variations'
-    }
-  },
-  images: [{
+  sku: { type: String, required: true, unique: true },
+  stock: { type: Number, required: true, default: 0 },
+  variations: [{
+    size: String,
+    color: String,
+    sku: { type: String, required: true },
+    stockQuantity: { type: Number, required: true, min: 0 },
+    additionalPrice: { type: Number, required: true, default: 0 }
+  }],
+  images: [{ 
     type: String,
     validate: {
       validator: function(v: string) {
-        return /^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)$/i.test(v);
+        return /^https?:\/\/.+/.test(v);
       },
       message: 'Invalid image URL'
     }
   }],
-  specs: {
-    length: Number,
-    width: Number,
-    material: String,
-    weight: Number
+  isActive: { type: Boolean, default: true },
+  tags: [{ type: String }],
+  ratings: {
+    average: { type: Number, default: 0 },
+    count: { type: Number, default: 0 }
   },
-  features: [String],
-  isActive: {
-    type: Boolean,
-    default: true
-  },
-  averageRating: {
-    type: Number,
-    min: 0,
-    max: 5
-  },
-  totalRatings: {
-    type: Number,
-    min: 0
-  },
-  dateAdded: {
-    type: Date,
-    default: Date.now
-  },
-  lastUpdated: {
-    type: Date,
-    default: Date.now
-  }
+  reviews: [{
+    userId: { type: Schema.Types.ObjectId, required: true },
+    rating: { type: Number, required: true, min: 1, max: 5 },
+    comment: String,
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: Date
+  }]
 }, {
-  timestamps: true
-});
-
-
-// Pre-save middleware to update lastUpdated
-ProductSchema.pre('save', function(next) {
-  this.lastUpdated = new Date();
-  next();
-});
-
-// Pre-save middleware to validate total prices
-ProductSchema.pre('save', function(next) {
-  const basePrice = this.basePrice;
-  
-  for (const variation of this.variations) {
-    const totalPrice = basePrice + (variation.additionalPrice || 0);
-    if (totalPrice < 0) {
-      next(new Error('Total price (base price + additional price) cannot be negative'));
-      return;
+  timestamps: true,
+  toObject: {
+    transform: function(doc, ret) {
+      ret.id = ret._id;
+      return ret;
     }
   }
-  
+});
+
+/**
+ * Calculate Average Rating Method
+ * Updates the product's average rating based on all reviews
+ */
+ProductSchema.methods.calculateRating = function() {
+  if (!this.reviews || this.reviews.length === 0) {
+    this.ratings = { average: 0, count: 0 };
+    return;
+  }
+
+  const total = this.reviews.reduce((sum: number, review: { rating: number }) => sum + review.rating, 0);
+  this.ratings = {
+    average: total / this.reviews.length,
+    count: this.reviews.length
+  };
+};
+
+/**
+ * Pre-save Middleware
+ * Validates variation prices and SKU uniqueness
+ */
+ProductSchema.pre('save', function(next) {
+  // Check for negative total prices in variations
+  if (this.variations) {
+    const basePrice = this.basePrice;
+    const skus = new Set<string>();
+
+    for (const variation of this.variations) {
+      // Check total price
+      const totalPrice = basePrice + variation.additionalPrice;
+      if (totalPrice < 0) {
+        next(new Error('Total price (base price + additional price) cannot be negative'));
+        return;
+      }
+
+      // Check SKU uniqueness
+      if (skus.has(variation.sku)) {
+        next(new Error('Duplicate SKU found in variations'));
+        return;
+      }
+      skus.add(variation.sku);
+    }
+  }
   next();
 });
 
 // Create and export the Product model
-const Product = mongoose.model<IProduct>('Product', ProductSchema);
+const Product = mongoose.model<IProductDocument>('Product', ProductSchema);
 
 export default Product;

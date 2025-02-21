@@ -9,7 +9,7 @@ import {
   PaymentMethod,
   PaymentStatus,
   ShippingMethod
-} from '../types/order.types';
+} from '../types/models/order.types';
 
 /**
  * Mongoose schema for orders

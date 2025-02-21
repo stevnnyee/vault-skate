@@ -32,34 +32,58 @@ export enum ProductBrand {
 }
 
 /**
- * Interface for product variations (sizes, colors, etc.)
- * @interface IProductVariation
+ * Product variation interface
+ * Defines structure for product variations (size, color, etc.)
  */
 export interface IProductVariation {
-  size?: string;                // Product size (if applicable)
-  color?: string;               // Product color (if applicable)
-  sku: string;                  // Unique identifier for this variation
-  stockQuantity: number;        // Available quantity
-  price: number;                // Price for this specific variation
+  _id?: Types.ObjectId;
+  size?: string;
+  color?: string;
+  sku: string;
+  stockQuantity: number;
+  additionalPrice: number;
+}
+
+/**
+ * Product review interface
+ * Defines structure for product reviews
+ */
+export interface IProductReview {
+  userId: Types.ObjectId;
+  rating: number;
+  comment?: string;
+  createdAt: Date;
+  updatedAt?: Date;
+}
+
+/**
+ * Product ratings interface
+ * Defines structure for product rating summary
+ */
+export interface IProductRatings {
+  average: number;
+  count: number;
 }
 
 /**
  * Main product interface
- * Defines the structure for all product documents in the database
- * @interface IProduct
+ * Defines the structure for all product documents
  */
 export interface IProduct {
-  _id: Types.ObjectId;          // MongoDB document ID
-  name: string;                 // Product name
-  slug: string;                 // URL-friendly version of name
-  description: string;          // Detailed product description
-  category: ProductCategory;    // Product category
-  brand: ProductBrand;          // Product brand
-  basePrice: number;            // Base product price
-  salePrice?: number;          // Optional sale price
-  variations: IProductVariation[]; // Product variations
-  images: string[];            // Array of image URLs
-  isActive: boolean;           // Whether product is available
-  createdAt: Date;             // Document creation date
-  updatedAt: Date;             // Last update date
+  _id: Types.ObjectId;
+  name: string;
+  description: string;
+  basePrice: number;
+  category: ProductCategory;
+  brand: ProductBrand;
+  sku: string;
+  stock: number;
+  variations: IProductVariation[];
+  images: string[];
+  isActive: boolean;
+  tags?: string[];
+  ratings: IProductRatings;
+  reviews: IProductReview[];
+  createdAt: Date;
+  updatedAt: Date;
 }

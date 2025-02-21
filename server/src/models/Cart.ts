@@ -1,6 +1,27 @@
+/**
+ * Cart Model
+ * Manages shopping cart functionality for users.
+ * 
+ * Features:
+ * - Stores cart items with quantities and variations
+ * - Calculates total amounts automatically
+ * - Handles product variations (size, color)
+ * - Tracks cart updates
+ * - Provides methods for cart manipulation
+ */
+
 import mongoose, { Document, Schema, Types } from 'mongoose';
 
-// Interface for cart item
+/**
+ * Cart Item Interface
+ * Defines the structure of individual items in the cart
+ * 
+ * Properties:
+ * - product: Reference to the product
+ * - quantity: Number of items
+ * - variation: Optional size/color variations
+ * - price: Item price at time of adding
+ */
 interface ICartItem {
   product: Types.ObjectId;
   quantity: number;
@@ -11,7 +32,16 @@ interface ICartItem {
   price: number;
 }
 
-// Interface for Cart model with explicit mongoose.Document
+/**
+ * Cart Interface
+ * Defines the structure of the shopping cart document
+ * 
+ * Properties:
+ * - user: Reference to the cart owner
+ * - items: Array of cart items
+ * - totalAmount: Calculated cart total
+ * - lastUpdated: Timestamp of last modification
+ */
 interface ICart extends Document {
   user: Types.ObjectId;
   items: ICartItem[];
@@ -19,7 +49,16 @@ interface ICart extends Document {
   lastUpdated: Date;
 }
 
-// Cart Schema
+/**
+ * Cart Schema
+ * Defines the MongoDB schema for shopping carts
+ * 
+ * Features:
+ * - One cart per user (unique constraint)
+ * - Stores multiple items with variations
+ * - Tracks total amount and updates
+ * - Maintains modification timestamps
+ */
 const CartSchema = new Schema<ICart>({
   user: {
     type: Schema.Types.ObjectId,
@@ -61,7 +100,11 @@ const CartSchema = new Schema<ICart>({
   timestamps: true
 });
 
-// Pre-save middleware to update total amount
+/**
+ * Pre-save Middleware
+ * Automatically updates cart totals and timestamps
+ * Runs before each save operation
+ */
 CartSchema.pre('save', function(next) {
   this.totalAmount = this.items.reduce((total, item: ICartItem) => {
     return total + (item.price * item.quantity);
@@ -71,7 +114,16 @@ CartSchema.pre('save', function(next) {
   next();
 });
 
-// Method to add item to cart
+/**
+ * Add Item Method
+ * Adds or updates an item in the cart
+ * 
+ * @param productId - ID of the product to add
+ * @param quantity - Number of items to add
+ * @param price - Current price of the item
+ * @param variation - Optional size/color variation
+ * @returns Updated cart document
+ */
 CartSchema.methods.addItem = function(
   productId: Types.ObjectId, 
   quantity: number, 
@@ -102,7 +154,14 @@ CartSchema.methods.addItem = function(
   return this.save();
 };
 
-// Method to remove item from cart
+/**
+ * Remove Item Method
+ * Removes an item from the cart
+ * 
+ * @param productId - ID of the product to remove
+ * @param variation - Optional size/color variation
+ * @returns Updated cart document
+ */
 CartSchema.methods.removeItem = function(
   productId: Types.ObjectId, 
   variation?: { size?: string; color?: string }
@@ -118,7 +177,13 @@ CartSchema.methods.removeItem = function(
   return this.save();
 };
 
-// Static method to find cart by user
+/**
+ * Find By User Static Method
+ * Retrieves a user's cart with populated product details
+ * 
+ * @param userId - ID of the cart owner
+ * @returns Cart document with populated product information
+ */
 CartSchema.statics.findByUser = function(userId: string) {
   return this.findOne({ user: userId }).populate('items.product');
 };
