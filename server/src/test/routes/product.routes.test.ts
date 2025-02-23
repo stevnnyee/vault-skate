@@ -263,7 +263,7 @@ describe('Product Routes Tests', () => {
 
       expect(response.status).toBe(403);
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Insufficient permissions');
+      expect(response.body.error).toBe('Admin privileges required');
     });
   });
 
@@ -335,7 +335,7 @@ describe('Product Routes Tests', () => {
 
       expect(response.status).toBe(403);
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Insufficient permissions');
+      expect(response.body.error).toBe('Admin privileges required');
     });
   });
 
@@ -380,7 +380,7 @@ describe('Product Routes Tests', () => {
 
       expect(response.status).toBe(403);
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Insufficient permissions');
+      expect(response.body.error).toBe('Admin privileges required');
     });
   });
 

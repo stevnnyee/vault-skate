@@ -6,9 +6,12 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
 import { connectDB } from './config/database';
 import authRoutes from './routes/auth.routes';
 import productRoutes from './routes/product.routes';
+import orderRoutes from './routes/order.routes';
 import { errorMiddleware } from './middleware/error.middleware';
 
 // Load environment variables from .env file
@@ -20,7 +23,10 @@ const port = process.env.PORT || 5000;
 
 // Global Middleware
 app.use(cors());                // Enable Cross-Origin Resource Sharing
+app.use(helmet());
+app.use(morgan('dev'));
 app.use(express.json());        // Parse JSON request bodies
+app.use(express.urlencoded({ extended: true }));
 
 // Basic health check route
 app.get('/', (req, res) => {
@@ -30,6 +36,7 @@ app.get('/', (req, res) => {
 // Mount API Routes
 app.use('/api/auth', authRoutes);       // Authentication routes
 app.use('/api/products', productRoutes); // Product management routes
+app.use('/api/orders', orderRoutes);
 
 // Error handling middleware (should be after all routes)
 app.use(errorMiddleware);
@@ -51,3 +58,5 @@ const startServer = async () => {
 };
 
 startServer();
+
+export { app };

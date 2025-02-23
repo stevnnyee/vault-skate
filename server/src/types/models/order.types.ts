@@ -8,11 +8,12 @@ import { IAddress } from './common.types';
  * Used to track the lifecycle of an order from creation to completion
  */
 export enum OrderStatus {
-  PENDING = 'Pending',      // Initial state when order is created
-  PROCESSING = 'Processing', // Order is being prepared/packed
-  SHIPPED = 'Shipped',      // Order has been shipped to customer
-  DELIVERED = 'Delivered',  // Order has been delivered successfully
-  CANCELLED = 'Cancelled'   // Order has been cancelled
+  PENDING = 'PENDING',
+  PROCESSING = 'PROCESSING',
+  SHIPPED = 'SHIPPED',
+  DELIVERED = 'DELIVERED',
+  CANCELLED = 'CANCELLED',
+  REFUNDED = 'REFUNDED'
 }
 
 /**
@@ -30,10 +31,12 @@ export enum PaymentMethod {
  * Enum for payment status to avoid magic strings
  */
 export enum PaymentStatus {
-  UNPAID = 'Unpaid',
-  PAID = 'Paid',
-  REFUNDED = 'Refunded',
-  PARTIALLY_REFUNDED = 'Partially Refunded'  // New status for partial refunds
+  UNPAID = 'UNPAID',
+  PENDING = 'PENDING',
+  PAID = 'PAID',
+  FAILED = 'FAILED',
+  PARTIALLY_REFUNDED = 'PARTIALLY_REFUNDED',
+  REFUNDED = 'REFUNDED'
 }
 
 /**
@@ -51,14 +54,11 @@ export enum ShippingMethod {
  * Each item represents a product being purchased with its details
  */
 export interface IOrderItem {
-  product: Types.ObjectId;     // Reference to the product in database
-  quantity: number;            // Number of items ordered
-  price: number;              // Price per unit at time of order
-  variation?: {               // Optional product variations
-    size?: string;           // Size variation if applicable
-    color?: string;          // Color variation if applicable
-    sku: string;            // Stock keeping unit
-  };
+  product: Types.ObjectId;
+  quantity: number;
+  price: number;
+  name: string;
+  subtotal: number;
 }
 
 /**
@@ -100,11 +100,14 @@ export interface IOrderMethods {
   calculateTax(): number;     // Add calculation methods
   calculateShipping(): number;
 }
+
 /**
  * Interface extending base order with Mongoose Document
  * Combines order properties with Mongoose Document functionality
  */
-export interface IOrderDocument extends IOrderBase, Document {}
+export interface IOrderDocument extends IOrderBase, Document {
+  _id: Types.ObjectId;
+}
 
 /**
  * Interface for static model methods
@@ -114,4 +117,49 @@ export interface IOrderModel extends Model<IOrderDocument, {}, IOrderMethods> {
   findByUser(userId: string): Promise<IOrderDocument[]>;          // Find orders by user
   findByStatus(status: OrderStatus): Promise<IOrderDocument[]>;   // Find orders by status
   findRecentOrders(limit?: number): Promise<IOrderDocument[]>;    // Find recent orders
+  getOrderAnalytics(
+    timeframe: 'day' | 'week' | 'month' | 'year',
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<{
+    totalOrders: number;
+    totalRevenue: number;
+    averageOrderValue: number;
+    ordersByStatus: Record<string, number>;
+    revenueByTimeframe: Array<{
+      date: string;
+      orders: number;
+      revenue: number;
+    }>;
+  }>;
+}
+
+export interface Address {
+  street: string;
+  city: string;
+  state: string;
+  country: string;
+  zipCode: string;
+}
+
+export interface OrderItem {
+  product: string; // Product ID
+  quantity: number;
+  price: number;
+}
+
+export interface Order {
+  user: string; // User ID
+  items: OrderItem[];
+  totalAmount: number;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  shippingAddress: Address;
+  billingAddress: Address;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface OrderDocument extends Order, Document {
+  _id: string;
 }

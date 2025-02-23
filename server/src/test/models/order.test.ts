@@ -19,10 +19,14 @@ describe('Order Model Test Suite', () => {
     orderNumber: `ORD${Date.now()}`,
     items: [{
       product: mockProductId,
+      name: 'Test Product',
       quantity: 2,
       price: 29.99,
-      variation: {
+      subtotal: 59.98,
+      sku: 'TEST-SKU-001',
+      variant: {
         size: 'M',
+        color: 'Black',
         sku: 'TEST-SKU-001'
       }
     }],
@@ -32,14 +36,16 @@ describe('Order Model Test Suite', () => {
       city: 'Test City',
       state: 'TS',
       zipCode: '12345',
-      country: 'Test Country'
+      country: 'Test Country',
+      isDefault: true
     },
     billingAddress: {
       street: '123 Test St',
       city: 'Test City',
       state: 'TS',
       zipCode: '12345',
-      country: 'Test Country'
+      country: 'Test Country',
+      isDefault: false
     },
     paymentMethod: PaymentMethod.CREDIT_CARD,
     shippingMethod: ShippingMethod.STANDARD
@@ -200,37 +206,43 @@ describe('Order Model Test Suite', () => {
   // Static Methods Tests
 describe('Static Methods', () => {
   it('should find orders by user', async () => {
-      const order = new Order({
-        user: mockUserId,
-        items: [{
-          product: mockProductId,
-          quantity: 2,
-          price: 29.99,
-          variation: {
-            size: 'M',
-            color: 'Black',
-            sku: 'SKU123'
-          }
-        }],
-        totalAmount: 59.98,
-        shippingAddress: {
-          street: '123 Test St',
-          city: 'Test City',
-          state: 'TS',
-          zipCode: '12345',
-          country: 'Test Country'
-        },
-        billingAddress: {
-          street: '123 Test St',
-          city: 'Test City',
-          state: 'TS',
-          zipCode: '12345',
-          country: 'Test Country'
-        },
-        paymentMethod: PaymentMethod.CREDIT_CARD,
-        shippingMethod: ShippingMethod.STANDARD
-      });
-      
+    const order = new Order({
+      user: mockUserId,
+      orderNumber: `ORD${Date.now()}`,
+      items: [{
+        product: mockProductId,
+        name: 'Test Product',
+        quantity: 2,
+        price: 29.99,
+        subtotal: 59.98,
+        sku: 'TEST-SKU-001',
+        variant: {
+          size: 'M',
+          color: 'Black',
+          sku: 'TEST-SKU-001'
+        }
+      }],
+      totalAmount: 59.98,
+      shippingAddress: {
+        street: '123 Test St',
+        city: 'Test City',
+        state: 'TS',
+        zipCode: '12345',
+        country: 'Test Country',
+        isDefault: true
+      },
+      billingAddress: {
+        street: '123 Test St',
+        city: 'Test City',
+        state: 'TS',
+        zipCode: '12345',
+        country: 'Test Country',
+        isDefault: false
+      },
+      paymentMethod: PaymentMethod.CREDIT_CARD,
+      shippingMethod: ShippingMethod.STANDARD
+    });
+    
     await order.save();
     
     const userOrders = await Order.findByUser(mockUserId.toString());
@@ -238,38 +250,43 @@ describe('Static Methods', () => {
   });
 
   it('should find orders by status', async () => {
-      const order = new Order({
-        user: mockUserId,
-        items: [{
-          product: mockProductId,
-          quantity: 1,
-          price: 29.99,
-          variation: {
-            size: 'M',
-            color: 'Black',
-            sku: 'SKU123'
-          }
-        }],
-        totalAmount: 29.99,
-        shippingAddress: {
-          street: '123 Test St',
-          city: 'Test City',
-          state: 'TS',
-          zipCode: '12345',
-          country: 'Test Country'
-        },
-        billingAddress: {
-          street: '123 Test St',
-          city: 'Test City',
-          state: 'TS',
-          zipCode: '12345',
-          country: 'Test Country'
-        },
-        paymentMethod: PaymentMethod.CREDIT_CARD,
-        shippingMethod: ShippingMethod.STANDARD,
-        status: OrderStatus.PENDING
-      });
-      
+    const order = new Order({
+      user: mockUserId,
+      orderNumber: `ORD${Date.now()}`,
+      items: [{
+        product: mockProductId,
+        name: 'Test Product',
+        quantity: 2,
+        price: 29.99,
+        subtotal: 59.98,
+        sku: 'TEST-SKU-001',
+        variant: {
+          size: 'M',
+          color: 'Black',
+          sku: 'TEST-SKU-001'
+        }
+      }],
+      totalAmount: 59.98,
+      shippingAddress: {
+        street: '123 Test St',
+        city: 'Test City',
+        state: 'TS',
+        zipCode: '12345',
+        country: 'Test Country',
+        isDefault: true
+      },
+      billingAddress: {
+        street: '123 Test St',
+        city: 'Test City',
+        state: 'TS',
+        zipCode: '12345',
+        country: 'Test Country',
+        isDefault: false
+      },
+      paymentMethod: PaymentMethod.CREDIT_CARD,
+      shippingMethod: ShippingMethod.STANDARD
+    });
+    
     await order.save();
     
     const pendingOrders = await Order.findByStatus(OrderStatus.PENDING);
