@@ -12,6 +12,7 @@ import { connectDB } from './config/database';
 import authRoutes from './routes/auth.routes';
 import productRoutes from './routes/product.routes';
 import orderRoutes from './routes/order.routes';
+import cartRoutes from './routes/cart.routes';
 import { errorMiddleware } from './middleware/error.middleware';
 
 // Load environment variables from .env file
@@ -36,7 +37,8 @@ app.get('/', (req, res) => {
 // Mount API Routes
 app.use('/api/auth', authRoutes);       // Authentication routes
 app.use('/api/products', productRoutes); // Product management routes
-app.use('/api/orders', orderRoutes);
+app.use('/api/orders', orderRoutes);     // Order management routes
+app.use('/api/cart', cartRoutes);        // Shopping cart routes
 
 // Error handling middleware (should be after all routes)
 app.use(errorMiddleware);
@@ -57,6 +59,9 @@ const startServer = async () => {
   }
 };
 
-startServer();
+// Only start the server if we're not in a test environment
+if (process.env.NODE_ENV !== 'test') {
+  startServer();
+}
 
 export { app };

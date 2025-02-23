@@ -1,28 +1,39 @@
 // src/types/cart.types.ts
-import { Types } from 'mongoose';
+import { Types, Document } from 'mongoose';
 
 /**
- * Interface for items in the shopping cart
- * @interface ICartItem
+ * Interface for cart items
+ * Represents individual items in the cart
  */
 export interface ICartItem {
-  product: Types.ObjectId;      // Reference to product
-  variation: string;            // Selected variation ID
-  quantity: number;             // Quantity in cart
-  price: number;                // Current price
+  product: Types.ObjectId;
+  quantity: number;
+  price: number;
+  variant: {
+    size: string;
+    color: string;
+    sku: string;
+  };
 }
 
 /**
- * Shopping cart interface
- * Defines the structure for shopping cart documents
- * @interface ICart
+ * Interface for cart document
+ * Represents the entire cart structure
  */
 export interface ICart {
-  _id: Types.ObjectId;          // MongoDB document ID
-  user: Types.ObjectId;         // Reference to user
-  items: ICartItem[];           // Cart items
-  totalAmount: number;          // Total cart amount
-  lastUpdated: Date;            // Last cart update
-  createdAt: Date;              // Document creation date
-  updatedAt: Date;              // Last update date
+  user: Types.ObjectId;
+  items: ICartItem[];
+  subtotal: number;
+  lastUpdated: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  expiresAt?: Date;
+}
+
+/**
+ * Interface for cart document with Mongoose Document
+ */
+export interface ICartDocument extends Document, Omit<ICart, '_id'> {
+  _id: Types.ObjectId;
+  calculateSubtotal(): Promise<number>;
 }
