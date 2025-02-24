@@ -2,7 +2,7 @@ export default function About() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="relative h-[50vh] bg-black flex items-center justify-center">
+      <section className="relative h-[60vh] bg-black flex items-center justify-center">
         <div 
           className="absolute inset-0 opacity-50 bg-cover bg-center"
           style={{ backgroundImage: "url('/images/about/about-hero.jpg')" }}
@@ -16,8 +16,8 @@ export default function About() {
       <div className="max-w-4xl mx-auto px-4 py-16 md:py-24">
         {/* Introduction */}
         <div className="mb-24">
-          <p className="text-xl md:text-2xl text-gray-800 leading-relaxed">
-            Welcome to Vault, your premier destination for high-quality skateboarding gear. 
+          <p className="text-xl md:text-2xl font-light text-black leading-relaxed tracking-wide text-justify">
+            Welcome to Vault, the most premier destination for high-quality skateboarding gear. 
             We're more than just a shop – we're skaters who understand the importance of quality 
             equipment in progressing your skills.
           </p>

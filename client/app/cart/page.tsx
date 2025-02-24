@@ -2,18 +2,28 @@ import Link from 'next/link';
 
 export default function Cart() {
   return (
-    <div className="py-8 px-4">
-      <h1 className="text-3xl md:text-4xl font-bold uppercase text-center mb-12 text-black">
-        Shopping Cart
-      </h1>
+    <div className="min-h-screen bg-white">
+      {/* Hero Section */}
+      <section className="relative h-[50vh] bg-black flex items-center justify-center">
+        <div 
+          className="absolute inset-0 opacity-50 bg-cover bg-center"
+          style={{ backgroundImage: "url('/images/cart/cart-hero.jpg')" }}
+        />
+        <h1 className="relative text-4xl md:text-6xl font-bold uppercase text-white text-center tracking-wider">
+          Shopping Cart
+        </h1>
+      </section>
 
-      <div className="max-w-4xl mx-auto">
+      {/* Cart Content */}
+      <div className="max-w-4xl mx-auto px-4 py-16 md:py-24">
         {/* Empty Cart State */}
-        <div className="text-center py-16">
-          <p className="text-xl mb-8 text-gray-800">Your cart is empty</p>
+        <div className="text-center py-16 bg-gray-50 rounded-lg">
+          <p className="text-xl md:text-2xl font-light text-black mb-8 tracking-wide">
+            Your cart is empty
+          </p>
           <Link 
             href="/products" 
-            className="inline-block bg-black text-white px-8 py-3 uppercase text-sm tracking-wider hover:opacity-80 transition-opacity"
+            className="inline-block bg-black text-white px-12 py-4 uppercase text-sm tracking-wider hover:opacity-80 transition-opacity"
           >
             Continue Shopping
           </Link>

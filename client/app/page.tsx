@@ -40,7 +40,7 @@ export default function Home() {
               <a 
                 key={category.slug}
                 href={`/products?category=${category.slug}`} 
-                className="group block"
+                className="group block text-center"
               >
                 <div className="aspect-square bg-gray-200 mb-6 flex items-center justify-center relative overflow-hidden">
                   {/* Category Image */}
@@ -55,7 +55,7 @@ export default function Home() {
                     {category.display}
                   </span>
                 </div>
-                <h3 className="text-xl font-bold uppercase text-black tracking-wide group-hover:opacity-70 transition-opacity">
+                <h3 className="text-xl font-bold uppercase text-black tracking-wide group-hover:opacity-70 transition-opacity mx-auto">
                   {category.name}
                 </h3>
               </a>
