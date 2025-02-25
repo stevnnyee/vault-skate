@@ -47,9 +47,14 @@ type ValidationRule = 'createOrder' | 'updateOrderStatus' | 'updatePaymentStatus
 const validations = {
   createOrder: [
     body('items').isArray().notEmpty().withMessage('Order items are required'),
-    body('items.*.product').isMongoId().withMessage('Valid product ID is required'),
+    body('items.*.product').notEmpty().withMessage('Product ID is required'),
+    body('items.*.name').isString().notEmpty().withMessage('Product name is required'),
+    body('items.*.sku').isString().notEmpty().withMessage('Product SKU is required'),
     body('items.*.quantity').isInt({ min: 1 }).withMessage('Quantity must be at least 1'),
     body('items.*.price').isFloat({ min: 0 }).withMessage('Price must be a positive number'),
+    body('items.*.variant').isObject().notEmpty().withMessage('Product variant is required'),
+    body('items.*.variant.size').isString().notEmpty().withMessage('Variant size is required'),
+    body('items.*.variant.sku').isString().notEmpty().withMessage('Variant SKU is required'),
     body('shippingAddress').isObject().notEmpty().withMessage('Shipping address is required'),
     body('shippingAddress.street').isString().notEmpty().withMessage('Street is required'),
     body('shippingAddress.city').isString().notEmpty().withMessage('City is required'),
@@ -62,8 +67,8 @@ const validations = {
     body('billingAddress.state').isString().notEmpty().withMessage('State is required'),
     body('billingAddress.zipCode').isString().notEmpty().withMessage('Zip code is required'),
     body('billingAddress.country').isString().notEmpty().withMessage('Country is required'),
-    body('paymentMethod').isString().notEmpty().withMessage('Payment method is required'),
-    body('shippingMethod').isString().notEmpty().withMessage('Shipping method is required')
+    body('paymentMethod').isString().notEmpty().isIn(['CREDIT_CARD', 'PAYPAL']).withMessage('Valid payment method is required'),
+    body('shippingMethod').isString().notEmpty().isIn(['STANDARD', 'EXPRESS']).withMessage('Valid shipping method is required')
   ],
   updateOrderStatus: [
     param('id').isMongoId().withMessage('Valid order ID is required'),

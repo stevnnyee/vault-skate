@@ -23,8 +23,19 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // Global Middleware
-app.use(cors());                // Enable Cross-Origin Resource Sharing
-app.use(helmet());
+app.use(cors({
+  origin: 'http://localhost:3000',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  credentials: true
+}));
+
+// Configure Helmet with less restrictive settings for development
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  contentSecurityPolicy: false
+}));
+
 app.use(morgan('dev'));
 app.use(express.json());        // Parse JSON request bodies
 app.use(express.urlencoded({ extended: true }));

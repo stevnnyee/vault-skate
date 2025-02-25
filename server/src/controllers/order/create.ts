@@ -29,18 +29,10 @@
 
 import { Request, Response } from 'express';
 import { OrderService } from '../../services/order.service';
-import { AuthenticatedRequest } from '../../middleware/auth';
 import { CreateOrderInput } from '../../types/services/order.service.types';
 
-export const createOrder = async (req: AuthenticatedRequest, res: Response) => {
+export const createOrder = async (req: Request, res: Response) => {
   try {
-    if (!req.user?.id) {
-      return res.status(401).json({
-        success: false,
-        error: 'Authentication required'
-      });
-    }
-
     const orderData: CreateOrderInput = {
       items: req.body.items,
       shippingAddress: req.body.shippingAddress,
@@ -49,11 +41,15 @@ export const createOrder = async (req: AuthenticatedRequest, res: Response) => {
       shippingMethod: req.body.shippingMethod
     };
 
-    const order = await OrderService.createOrder(req.user.id, orderData);
+    const order = await OrderService.createOrder('guest', orderData);
 
     return res.status(201).json({
       success: true,
-      data: order
+      data: {
+        _id: order._id.toString(),
+        orderNumber: order.orderNumber,
+        total: order.totalAmount
+      }
     });
   } catch (error) {
     return res.status(400).json({

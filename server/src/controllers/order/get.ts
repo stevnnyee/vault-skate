@@ -46,14 +46,15 @@ import { NotFoundError } from '../../utils/errors';
 
 export const getOrderById = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    if (!req.user?.id) {
-      return res.status(401).json({
+    const orderId = req.params.id;
+    if (!orderId) {
+      return res.status(400).json({
         success: false,
-        error: 'Authentication required'
+        error: 'Order ID is required'
       });
     }
 
-    const order = await OrderService.getOrderById(req.params.id);
+    const order = await OrderService.getOrderById(orderId);
     
     if (!order) {
       return res.status(404).json({
@@ -62,8 +63,28 @@ export const getOrderById = async (req: AuthenticatedRequest, res: Response) => 
       });
     }
 
-    // Check if user has permission to view this order
-    if (req.user.role !== UserRole.ADMIN && order.user._id.toString() !== req.user.id) {
+    // For guest orders, skip the user permission check
+    if (req.baseUrl.includes('/guest/')) {
+      return res.status(200).json({
+        success: true,
+        data: {
+          _id: order._id.toString(),
+          orderNumber: order.orderNumber,
+          totalAmount: order.totalAmount,
+          status: order.status,
+          createdAt: order.createdAt,
+          items: order.items.map(item => ({
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price
+          })),
+          shippingAddress: order.shippingAddress
+        }
+      });
+    }
+
+    // For authenticated orders, check user permission
+    if (req.user && req.user.role !== UserRole.ADMIN && order.user._id.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         error: 'Access denied'
@@ -72,12 +93,24 @@ export const getOrderById = async (req: AuthenticatedRequest, res: Response) => 
 
     return res.status(200).json({
       success: true,
-      data: order
+      data: {
+        _id: order._id.toString(),
+        orderNumber: order.orderNumber,
+        totalAmount: order.totalAmount,
+        status: order.status,
+        createdAt: order.createdAt,
+        items: order.items.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        shippingAddress: order.shippingAddress
+      }
     });
   } catch (error) {
     return res.status(400).json({
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get order'
+      error: error instanceof Error ? error.message : 'Failed to retrieve order'
     });
   }
 };

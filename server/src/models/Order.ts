@@ -78,7 +78,7 @@ const AddressSchema = new Schema({
  * Includes product details and variant information
  */
 const OrderItemSchema = new Schema({
-  product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+  product: { type: String, required: true },
   name: { type: String, required: true },
   sku: { type: String, required: true },
   quantity: { type: Number, required: true, min: 1 },

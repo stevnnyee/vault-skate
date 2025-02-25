@@ -60,7 +60,6 @@ const router = Router();
  * Handles new order submission and validation
  */
 router.post('/',
-  authenticate,
   validate('createOrder'),
   (req: Request, res: Response) => createOrder(req, res)
 );
@@ -110,6 +109,11 @@ router.get('/trends',
  * Order Retrieval Routes
  * Handles fetching single orders and order lists
  */
+router.get('/guest/:id',
+  validate('getOrderById'),
+  (req: Request, res: Response) => getOrderById(req, res)
+);
+
 router.get('/:id',
   authenticate,
   validate('getOrderById'),

@@ -121,3 +121,126 @@ export const getProductById = async (req: ProductQueryRequest, res: Response) =>
     });
   }
 };
+
+// Super simple local products data
+interface LocalProduct {
+  id: number;
+  name: string;
+  sku: string;
+  price: number;
+}
+
+const localProducts: Record<string, LocalProduct> = {
+  "1": {
+    id: 1,
+    name: 'Element Complete Skateboard',
+    sku: 'SKB-ELE-001',
+    price: 129.99
+  },
+  "2": {
+    id: 2,
+    name: 'Baker Team Deck',
+    sku: 'SKB-BAK-001',
+    price: 59.99
+  },
+  "3": {
+    id: 3,
+    name: 'Independent Stage 11 Trucks',
+    sku: 'SKB-IND-001',
+    price: 49.99
+  },
+  "4": {
+    id: 4,
+    name: 'Spitfire Formula Four Wheels',
+    sku: 'SKB-SPI-001',
+    price: 34.99
+  },
+  "5": {
+    id: 5,
+    name: 'Girl Skateboard Deck',
+    sku: 'SKB-GRL-001',
+    price: 54.99
+  },
+  "8": {
+    id: 8,
+    name: 'Supreme Skateboard Tool',
+    sku: 'SKB-SUP-001',
+    price: 29.99
+  }
+};
+
+export const getLocalProductById = async (req: ProductQueryRequest, res: Response) => {
+  try {
+    console.log('Request details:', {
+      params: req.params,
+      query: req.query,
+      path: req.path,
+      method: req.method,
+      url: req.url,
+      baseUrl: req.baseUrl,
+      originalUrl: req.originalUrl,
+      headers: req.headers
+    });
+
+    const productId = req.params.id;
+    console.log('Product lookup details:', {
+      receivedId: productId,
+      idType: typeof productId,
+      availableIds: Object.keys(localProducts),
+      requestPath: req.path,
+      requestUrl: req.url
+    });
+    
+    if (!productId) {
+      console.log('No product ID provided');
+      return res.status(400).json({
+        success: false,
+        error: 'Product ID is required'
+      });
+    }
+
+    // Ensure we're using a string key
+    const stringId = productId.toString();
+    console.log('Looking up product:', {
+      originalId: productId,
+      stringId: stringId,
+      hasProduct: stringId in localProducts,
+      availableIds: Object.keys(localProducts),
+      requestPath: req.path
+    });
+    
+    const product = localProducts[stringId];
+    console.log('Found product:', product);
+    
+    if (!product) {
+      console.log('Product not found:', {
+        lookupId: stringId,
+        availableIds: Object.keys(localProducts),
+        requestPath: req.path,
+        requestUrl: req.url
+      });
+      return res.status(404).json({
+        success: false,
+        error: 'Product not found'
+      });
+    }
+
+    const response = {
+      success: true,
+      data: { product }
+    };
+    console.log('Sending response:', response);
+    return res.status(200).json(response);
+  } catch (error) {
+    console.error('Error details:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      requestPath: req.path,
+      requestUrl: req.url
+    });
+    return res.status(400).json({
+      success: false,
+      error: 'Failed to retrieve product'
+    });
+  }
+};

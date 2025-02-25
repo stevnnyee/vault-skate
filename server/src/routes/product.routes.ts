@@ -25,7 +25,7 @@
 
 import { Router } from 'express';
 import { createProduct } from '../controllers/product/create';
-import { getProducts, getProductById } from '../controllers/product/get';
+import { getProducts, getProductById, getLocalProductById } from '../controllers/product/get';
 import { updateProduct } from '../controllers/product/update';
 import { deleteProduct } from '../controllers/product/delete';
 import { searchProducts } from '../controllers/product/search';
@@ -47,6 +47,14 @@ const router = Router();
 
 // Public routes - No authentication required
 router.get(
+  '/local/:id',
+  (req: Request, res: Response) => {
+    console.log('Local product route hit with ID:', req.params.id);
+    return getLocalProductById(req as ProductQueryRequest, res);
+  }
+);
+
+router.get(
   '/',
   validateQueryProducts,
   (req: Request, res: Response) => getProducts(req as ProductQueryRequest, res)
@@ -59,6 +67,7 @@ router.get(
   (req: Request, res: Response) => searchProducts(req as ProductQueryRequest, res)
 );
 
+// Generic product endpoint - must come after /local/:id
 router.get(
   '/:id',
   (req: Request, res: Response) => getProductById(req as ProductQueryRequest, res)
