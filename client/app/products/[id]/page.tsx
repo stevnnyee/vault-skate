@@ -3,6 +3,7 @@
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useState } from 'react';
+import { useCart } from '@/context/CartContext';
 
 interface ProductVariant {
   size: string;
@@ -160,6 +161,7 @@ export default function ProductDetail() {
   const params = useParams();
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
+  const { addToCart } = useCart();
 
   const product = products.find(p => p.id === Number(params.id));
 
@@ -178,6 +180,28 @@ export default function ProductDetail() {
       </div>
     );
   }
+
+  const handleAddToCart = () => {
+    if (product.variants.length > 0 && !selectedSize) {
+      return; // Don't add if size is required but not selected
+    }
+
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      quantity: quantity,
+      size: selectedSize || 'One Size'
+    });
+
+    // Reset form
+    setQuantity(1);
+    setSelectedSize('');
+
+    // Optional: Show success message or redirect to cart
+    alert('Added to cart successfully!');
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -261,6 +285,7 @@ export default function ProductDetail() {
               <button 
                 className="w-full bg-black text-white py-4 uppercase text-sm tracking-wider hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={product.variants.length > 0 && !selectedSize}
+                onClick={handleAddToCart}
               >
                 {product.variants.length > 0 && !selectedSize 
                   ? 'Please Select a Size' 
