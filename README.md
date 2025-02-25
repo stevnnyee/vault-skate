@@ -108,7 +108,7 @@ cd server
 npm run dev
 \`\`\`
 
-## 🚀 Deployment
+## Deployment
 
 ### Deploying to Vercel
 
