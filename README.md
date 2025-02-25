@@ -2,7 +2,7 @@
 
 A full-stack e-commerce application built with Next.js and Node.js, specializing in skateboarding equipment and accessories. The platform offers a seamless shopping experience with modern design and robust functionality.
 
-## 🚀 Features
+## Features
 
 ### Customer Features
 - **Product Browsing & Search**
@@ -61,7 +61,7 @@ A full-stack e-commerce application built with Next.js and Node.js, specializing
 - Vercel (Deployment)
 - MongoDB Atlas (Database)
 
-## 📦 Installation
+## Installation
 
 1. Clone the repository:
 \`\`\`bash
@@ -144,7 +144,7 @@ vercel --prod
 #### Client
 - \`NEXT_PUBLIC_API_URL\`: Backend API URL
 
-## 📝 API Documentation
+## API Documentation
 
 ### Products
 
@@ -163,7 +163,7 @@ vercel --prod
 - \`PATCH /api/orders/:id/status\`: Update order status (admin)
 - \`GET /api/orders/history\`: Get order history (authenticated)
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create your feature branch (\`git checkout -b feature/AmazingFeature\`)
