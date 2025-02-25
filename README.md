@@ -132,7 +132,7 @@ vercel
 vercel --prod
 \`\`\`
 
-## 🔧 Configuration
+## Configuration
 
 ### Environment Variables
 
